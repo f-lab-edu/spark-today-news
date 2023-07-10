@@ -1,7 +1,7 @@
 <div align=center>
 
 # spark-today-news
-[🇰🇷]() | 🇬🇧🇺🇸
+[🇰🇷](https://github.com/dongwoodev/spark-today-news/blob/feature/README.md) | 🇬🇧🇺🇸
 
 ## Introduce
 #### A Short News from South Korea
@@ -11,6 +11,7 @@
 ## Details
 ### Skill Stack
 **BE** : `Python3.9.14`
+
 **CI/CD** : `Github` `VS code`
 
 ### Process

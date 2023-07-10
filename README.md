@@ -1,7 +1,7 @@
 <div align=center>
 
 # spark-today-news
-🇰🇷 | [🇬🇧🇺🇸]()
+🇰🇷 | [🇬🇧🇺🇸](https://github.com/dongwoodev/spark-today-news/blob/feature/README_us.md)
 
 ## 프로젝트 소개
 #### 오늘 당신이 못봤던 짧은 대한민국 소식지
@@ -11,6 +11,7 @@
 ## 프로젝트 명세
 ### 기술 환경
 **BE** : `Python3.9.14`
+
 **CI/CD** : `Github` `VS code`
 
 ### 과정 소개
