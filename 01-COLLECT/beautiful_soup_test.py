@@ -21,21 +21,23 @@ page_previous = None
 
 start = time.time()
 while True:
-    url = f"https://news.naver.com/main/list.naver?mode=LS2D&mid=shm&sid2=249&sid1=102&date={date}&page={page}"
+    url = f"https://news.naver.com/main/list.naver?mode=LS2D&mid=sec&sid2=249&sid1=102&date={date}&page={page}"
     rep = req.get(url, headers=header)
-    soup = bs(rep.text, "html.parser")
+    if req.status_codes == 200:
+        soup = bs(rep.text, "html.parser")
 
-    # loop exit condition
-    page_num = soup.select_one('#main_content > div.paging > strong').text
-    if page_num == page_previous:
-        break
-    page_previous = copy.deepcopy(page_num)
-    
-    # data crwaling
-    headlines = soup.select("dt:nth-child(2)")
-    for headline in headlines:
-        f.write(headline.get_text(strip=True) + "\n")
-    page += 1
+        # loop exit condition
+        page_num = soup.select_one('#main_content > div.paging > strong').text
+        if page_num == page_previous:
+            break
+        page_previous = copy.deepcopy(page_num)
+        
+        # data crwaling
+        headlines = soup.select("dt:nth-child(2)")
+        date = soup.select("span.date.is_new")
+        for headline in headlines:
+            f.write(headline.get_text(strip=True) + "\n")
+        page += 1
 end = time.time()
 
 print("done!" + f"{end - start:.5f} sec")
