@@ -13,13 +13,13 @@ from bs4 import BeautifulSoup as bs
 # Kafka
 from kafka import KafkaProducer
 
-brokers = ["localhost:9091","localhost:9092","localhost:9093"]
+brokers = ['175.45.203.105:9092']
 # set kafka producer
 producer = KafkaProducer(
-    acks=0,
-    compression_type='gzip',
-    booststrap_servers=brokers, # 브로커 주소: 포트번호
-    value_serializer=lambda v: dumps(v).encode('utf-8'),
+    acks=0, # 메시지 받는 사람이 잘  받았는지 체크하는 옵션 (0은 확인 없이그냥 보내기)
+    compression_type='gzip', # 메시지 전달할 때  압축
+    bootstrap_servers=brokers, # 브로커 주소: 포트번호
+    value_serializer=lambda v: dumps(v).encode('utf-8'), # 데이터 전송을 위해 byte 단위로 바꿔주는 작업
 )
 
 # date setting
@@ -67,13 +67,16 @@ while True:
                 for tab in tab_string:
                     headline = headline.replace(tab, ' ')
             
+            times = dt.datetime.now(tz_asia_seoul).strftime('%Y%m%d %H:%M:%S')
+
             # 토픽(news)와 메세지 보내기
             producer.send('news', {
-                'head' : headline
+                'head' : headline,
+                'date' : times
             })
-
+            print(headline, times)
             producer.flush() # 데이터 비우기
 
-    print("done!" + f"{time.time() - start:.5f} sec")
+print("done!" + f"{time.time() - start:.5f} sec")
 
 
