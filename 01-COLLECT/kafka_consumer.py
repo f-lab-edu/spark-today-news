@@ -5,7 +5,7 @@ brokers = ['175.45.203.105:9092']
 
 # set kafka consumer
 consumer = KafkaConsumer(
-    'news', # 읽어올 토픽 이름
+    'new-test', # 읽어올 토픽 이름
     enable_auto_commit=True, # 완료되었을 때 문자 전송
     # auto_offset_reset="earliest", # 어디서부터 값을 읽어올지 (earlest 가장 처음 latest는 가장 최근)
     # group_id='my-group', # 그룹핑하여 토픽 지정할 수 있다 (같은 컨슈머로 작업)
@@ -16,6 +16,6 @@ consumer = KafkaConsumer(
 
 
 for news in consumer:
-    print(f"{news.value['head', 'time']}")
+    print(f"{news.value['head', 'date']}")
 
 consumer.close()
