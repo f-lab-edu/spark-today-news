@@ -68,19 +68,19 @@ echo 'export KAFKA_HOME=/root/kafka_2.13-3.5.0' >> ~/.bashrc \
 1. 주키퍼 서버 실행
 
 ```
- //opt/kafka_2.12-3.4.1/bin/zookeeper-server-start.sh //opt/kafka_2.12-3.4.1/config/zookeeper.properties
+ opt/kafka_2.12-3.4.1/bin/zookeeper-server-start.sh opt/kafka_2.12-3.4.1/config/zookeeper.properties
 ```
 
 2. 다른 터미널로 카프카 서버 실행
 
 ```
- //opt/kafka_2.12-3.4.1/bin/kafka-server-start.sh //opt/kafka_2.12-3.4.1/config/server.properties
+ opt/kafka_2.12-3.4.1/bin/kafka-server-start.sh opt/kafka_2.12-3.4.1/config/server.properties
 ```
 
 3. 다른 터미널로 토픽 생성
 
 ```
-//opt/kafka_2.12-3.4.1/bin/kafka-topics.sh --create --topic new-topic --bootstrap-server 175.45.203.105:9092
+opt/kafka_2.12-3.4.1/bin/kafka-topics.sh --create --topic new-topic --bootstrap-server 175.45.203.105:9092
 ```
 
 ### Producer
@@ -101,5 +101,45 @@ opt/kafka_2.13-3.5.0//bin/kafka-console-consumer.sh --topic new-topic --from-beg
 ---
 
 ### 로컬에서 실시간 데이터 전송하기
-- local에서 kafka-python을 이용해 데이터를 전송하려고 했으나 전송이 되지 않음.
+- 로컬 파이썬 가상 환경 빌드하기
+```
+source ./pyversion/bin/activate
+```
 
+
+- local에서 kafka-python을 이용해 데이터를 전송하려고 했으나 전송이 되지 않음.
+    - 내외부 통신을  따로 분리해서 적용할 계획
+
+```
+vim opt/kafka_2.12-3.4.1/config/server.properties
+```
+
+```
+############################# Socket Server Settings #############################
+
+# The address the socket server listens on. If not configured, the host name will be equal to the value of
+# java.net.InetAddress.getCanonicalHostName(), with PLAINTEXT listener name, and port 9092.
+#   FORMAT:
+#     listeners = listener_name://host_name:port
+#   EXAMPLE:
+#     listeners = PLAINTEXT://your.host.name:9092
+listeners=INTERNAL://:9092, EXTERNAL://0.0.0.0:9093
+
+# Listener name, hostname and port the broker will advertise to clients.
+# If not set, it uses the value for "listeners".
+advertised.listeners=INTERNAL://broker:9092, EXTERNAL://broker:66535
+
+# Maps listener names to security protocols, the default is for them to be the same. See the config documentation for more details
+listener.security.protocol.map=EXTERNAL:PLAINTEXT, INTERNAL:PLAINTEXT
+inter.broker.listener.name=INTERNAL
+
+```
+
+- 실제로 외부환경에서 EC2에 있는 Kafka 브로커로 데이터를 전달해보자.
+  - 먼저 `consumer.py`를 실행했을 때 다음과 같은 오류가 발생했다.
+   ```
+   kafka.errors.NoBrokersAvailable: NoBrokersAvailable
+   ```
+   이를 인지하고 [API_VERSION](https://hajunyoo.oopy.io/kafka/5)을 달아주었다.
+   Api 버전은 kafka_api의 버전을 뜻한다고 한다. 
+   
