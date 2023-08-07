@@ -1,7 +1,7 @@
 from kafka import KafkaConsumer
 from json import loads
 # brokers = ['0.0.0.0:9092']
-brokers = ['175.45.203.105:66535']
+brokers = ['175.45.203.105:65535']
 
 # set kafka consumer
 consumer = KafkaConsumer(

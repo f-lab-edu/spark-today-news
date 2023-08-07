@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup as bs
 # Kafka
 from kafka import KafkaProducer
 # brokers = ['0.0.0.0:9092']
-brokers = ['175.45.203.105:66535']
+brokers = ['175.45.203.105:65535']
 # set kafka producer
 producer = KafkaProducer(
     acks=0, # 메시지 받는 사람이 잘  받았는지 체크하는 옵션 (0은 확인 없이그냥 보내기)
@@ -78,7 +78,7 @@ while True:
                     producer.send('new-topic', {
                         'head' : headline,
                         'date' : times,
-                        'genre': gen
+                        'genre' : gen
                     })
                     producer.flush() # 데이터 비우기
 
