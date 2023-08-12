@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup as bs
 # Kafka
 from kafka import KafkaProducer
 # brokers = ['0.0.0.0:9092']
-broker = '192.168.45.222:9092'
+broker = '175.45.203.105:9093'
 # set kafka producer
 producer = KafkaProducer(
     acks=0, # 메시지 받는 사람이 잘  받았는지 체크하는 옵션 (0은 확인 없이그냥 보내기)
