@@ -13,7 +13,9 @@ from bs4 import BeautifulSoup as bs
 # Kafka
 from kafka import KafkaProducer
 # brokers = ['0.0.0.0:9092']
-broker = '175.45.203.105:9093'
+broker = 'localhost:9092'
+topic = "today-news"
+
 # set kafka producer
 producer = KafkaProducer(
     acks=0, # 메시지 받는 사람이 잘  받았는지 체크하는 옵션 (0은 확인 없이그냥 보내기)
@@ -42,7 +44,7 @@ while True:
             html = rep.text
             soup = bs(html, "html.parser")
             headlines = soup.select("dt:nth-child(2) > a")
-            dates = soup.select("span.date.is_new")
+            upload_times = soup.select("span.date.is_new")
             presses = soup.select("span.writing")
             for i in range(3):
                 try: 
@@ -50,29 +52,35 @@ while True:
                     id = url.split("?")[0].replace("https://n.news.naver.com/mnews/article/", "").replace("/", "-")
                     headline = headlines[i].get_text(strip=True)
                     press = presses[i].get_text(strip=True)
-                    subhtml = req.get(url).text
-                    date = dates[i].get_text()
+                    article = req.get(url).text
+                    subparser = bs(article, "html.parser")
+                    article_date = subparser.select("#ct > div.media_end_head.go_trans > div.media_end_head_info.nv_notrans > div.media_end_head_info_datestamp > div > span")[0].get_text()
+                    article_date_only = article_date.split(" ")[0].replace(".","")
+                    article_time = article_date.split(" ", 1)[1]
+                    upload_time = upload_times[i].get_text()
                 except:
                     continue
 
-                if '시간전' in date or '일전' in date or '2022' in date:
+                if '시간전' in upload_time or '일전' in upload_time or '2022' in upload_time:
                     continue
                 
                 # 2분전 데이터를 가져옵니다.
-                if int(date.split('분전')[0]) < 2:
+                if int(upload_time.split('분전')[0]) < 10:
                     times = dt.datetime.now(tz_asia_seoul).strftime('%Y%m%d %H:%M:%S')
                     gen = genres[genre]
                     
-                    print(id, headline, times, gen, press, subhtml)
+                    print(id, headline, times, gen, press, article_date_only, article_time)
 
                     # 토픽(news)와 메세지 보내기
-                    producer.send('new-topic', {
+                    producer.send(topic, {
                         'id' : id,
                         'head' : headline,
-                        'date' : times,
                         'genre' : gen,
                         'press' : press,
-                        'html' : subhtml
+                        'article_date' : article_date_only,
+                        'article_time' : article_time,
+                        'times' : times,
+                        'html' : article
                     })
                     producer.flush() # 데이터 비우기
 
