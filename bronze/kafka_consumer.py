@@ -15,7 +15,8 @@ broker = '127.0.0.1:9092'
 topic = 'today-news'
 
 tz_asia_seoul = ZoneInfo("Asia/Seoul")
-date = dt.datetime.now(tz_asia_seoul).strftime('%Y%m%d')
+current_date = dt.datetime.now(tz_asia_seoul).strftime('%Y%m%d')
+current_time = dt.datetime.now(tz_asia_seoul).strftime('%H')
 
 
 # set kafka consumer
@@ -31,12 +32,47 @@ consumer = KafkaConsumer(
 )
 
 
+# Configure S3 Object
 obj = ObjectS3.ObjectS3()
-bucket, object_id = "spnews", f"news{date}"
-f = open(f"{object_id}.txt", 'w')
-df = pd.DataFrame(columns=['id', 'head','genre','press', 'article_date', 'article_time', 'time', 'article_html'])
+
+# bucket-name, object-id
+bucket, object_id = "spnews", f"news{current_date}"
+object_id2 = f"{object_id}{current_time}"
+f = open(f"data/{object_id2}.txt", 'w')
+
+# Test 용도
+# i = 0
+# for news in consumer:
+#     i += 1
+#     data = f"{news.value['id']}| {news.value['head']}| {news.value['genre']}| {news.value['press']}| {news.value['article_date']}| {news.value['article_time']}| {news.value['times']}| {news.value['detail']}\n"
+#     f.write(data)
+#     print(i)
+#     if i == 100: # 데이터 갯수
+#         f.close()
+#         obj.add_file(bucket, f"{object_id}/{object_id2}.txt", f"data/{object_id2}.txt") # 버켓, 저장할 파일 위치,불러올 파일 위치
+#         break
+
+
+## 실제 사용
 for news in consumer:
-    df.append(news.value()) # 뉴스 데이터 데이터 프레임에 넣기
-    df.to_parquet(f'./data/{object_id}.parquet', compression='gzip') # 현재 위치 파켓 파일 저장
-    obj.add_file(bucket, f"{object_id}.parquet", f"./{object_id}.parquet") # 버켓, 저장할 파일 위치,불러올 파일 위치
+
+    # 시간이 변경된 경우
+    if news.value['article_time'][:2] != current_time:
+        f.close() # 파일쓰기 종료
+        obj.add_file(bucket, f"{object_id}/{object_id2}.txt", f"data/{object_id2}.txt") # s3에 이전 날짜 데이터 저장하기
+
+        # 만약 날짜가 변경된 것이라면
+        if news.value['article_date'] != current_date:
+            current_date = dt.datetime.now(tz_asia_seoul).strftime('%Y%m%d') # 날짜 갱신
+            object_id = f"news{current_date}" # 날짜 객체 명 갱신
+            obj.create_folder(bucket, object_id) # 새로운 날짜 폴더 생성
+
+        # 시간 갱신 후 시간 객체 갱신(파일명)
+        current_time = dt.datetime.now(tz_asia_seoul).strftime('%H%M')
+        object_id2 = f"{object_id}{current_time}"
+        f = open(f"data/{object_id2}.txt", 'w') # 파일 열기
+    
+    data = f"{news.value['id']}| {news.value['head']}| {news.value['genre']}| {news.value['press']}| {news.value['article_date']}| {news.value['article_time']}| {news.value['times']}| {news.value['detail']}\n"
+    f.write(data)
+
 consumer.close()

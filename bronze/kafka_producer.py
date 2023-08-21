@@ -48,15 +48,40 @@ while True:
             presses = soup.select("span.writing")
             for i in range(3):
                 try: 
+                    ## 고유 PK  Id
                     url = headlines[i]['href']
                     id = url.split("?")[0].replace("https://n.news.naver.com/mnews/article/", "").replace("/", "-")
+
+                    ## 헤드라인 데이터
                     headline = headlines[i].get_text(strip=True)
+
+                    ## 언론사 데이터
                     press = presses[i].get_text(strip=True)
+
+                    ## 기사 내용 데이터
                     article = req.get(url).text
                     subparser = bs(article, "html.parser")
+                    article_detail = str(subparser.select("#newsct_article"))
+
+                    ## 기사 날짜 데이터
                     article_date = subparser.select("#ct > div.media_end_head.go_trans > div.media_end_head_info.nv_notrans > div.media_end_head_info_datestamp > div > span")[0].get_text()
                     article_date_only = article_date.split(" ")[0].replace(".","")
-                    article_time = article_date.split(" ", 1)[1]
+
+                    ## 기사 시간 데이터
+                    m, article_time = article_date.split(" ", 1)[1].split(" ") # 오후 1:25
+                    if m == '오후':
+                        if article_time.split(':')[0] != '12':
+                            article_time = f"{int(article_time.split(':')[0]) + 12}" + article_time.split(':')[1]
+                        else:
+                            article_time = article_time.replace(":","")
+
+                    else:
+                        if article_time.split(':')[0] != '12':
+                            article_time = "0" + article_time.split(':')[1]
+                        else:
+                            article_time = article_time.replace(":","")
+
+                    ## 업로드된 시간 데이터 e.g. n분전
                     upload_time = upload_times[i].get_text()
                 except:
                     continue
@@ -65,11 +90,11 @@ while True:
                     continue
                 
                 # 2분전 데이터를 가져옵니다.
-                if int(upload_time.split('분전')[0]) < 10:
+                if int(upload_time.split('분전')[0]) < 2:
                     times = dt.datetime.now(tz_asia_seoul).strftime('%Y%m%d %H:%M:%S')
                     gen = genres[genre]
                     
-                    print(id, headline, times, gen, press, article_date_only, article_time)
+                    print(id, headline, times, gen, press, article_date_only, article_time, article_detail)
 
                     # 토픽(news)와 메세지 보내기
                     producer.send(topic, {
@@ -80,7 +105,7 @@ while True:
                         'article_date' : article_date_only,
                         'article_time' : article_time,
                         'times' : times,
-                        'html' : article
+                        'detail' : article_detail
                     })
                     producer.flush() # 데이터 비우기
 
