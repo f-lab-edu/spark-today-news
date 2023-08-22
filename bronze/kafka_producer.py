@@ -58,10 +58,10 @@ while True:
                     ## 언론사 데이터
                     press = presses[i].get_text(strip=True)
 
-                    ## 기사 내용 데이터
+                    ## 기사 데이터
                     article = req.get(url).text
                     subparser = bs(article, "html.parser")
-                    article_detail = str(subparser.select("#newsct_article"))
+                    article_url = url
 
                     ## 기사 날짜 데이터
                     article_date = subparser.select("#ct > div.media_end_head.go_trans > div.media_end_head_info.nv_notrans > div.media_end_head_info_datestamp > div > span")[0].get_text()
@@ -76,8 +76,8 @@ while True:
                             article_time = article_time.replace(":","")
 
                     else:
-                        if article_time.split(':')[0] != '12':
-                            article_time = "0" + article_time.split(':')[1]
+                        if article_time.split(':')[0] == '12':
+                            article_time = "00" + article_time.split(':')[1]
                         else:
                             article_time = article_time.replace(":","")
 
@@ -94,7 +94,7 @@ while True:
                     times = dt.datetime.now(tz_asia_seoul).strftime('%Y%m%d %H:%M:%S')
                     gen = genres[genre]
                     
-                    print(id, headline, times, gen, press, article_date_only, article_time, article_detail)
+                    print(id, headline, times, gen, press, article_date_only, article_time, url)
 
                     # 토픽(news)와 메세지 보내기
                     producer.send(topic, {
@@ -105,7 +105,7 @@ while True:
                         'article_date' : article_date_only,
                         'article_time' : article_time,
                         'times' : times,
-                        'detail' : article_detail
+                        'url' : url
                     })
                     producer.flush() # 데이터 비우기
 
